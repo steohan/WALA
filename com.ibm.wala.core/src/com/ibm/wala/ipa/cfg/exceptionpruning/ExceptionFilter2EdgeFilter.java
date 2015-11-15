@@ -32,6 +32,13 @@ implements EdgeFilter<Block> {
 		this.cha = cha;
 	}
 
+  public ExceptionFilter2EdgeFilter(ExceptionFilter<SSAInstruction> filter,
+       ControlFlowGraph<SSAInstruction, Block> cfg) {
+    this.cfg = cfg;
+    this.filter = filter;
+    this.cha = null;
+  }	
+
 	@Override
 	public boolean hasExceptionalEdge(Block src, Block dst) {
 		boolean hasExceptionalEdge = this.cfg.getExceptionalSuccessors(src)

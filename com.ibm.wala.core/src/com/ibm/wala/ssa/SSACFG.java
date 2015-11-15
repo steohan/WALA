@@ -79,7 +79,7 @@ public class SSACFG implements ControlFlowGraph<SSAInstruction, ISSABasicBlock> 
   /**
    * A delegate CFG, pre-built, which stores the graph structure of this CFG.
    */
-  final protected AbstractCFG<IInstruction, IBasicBlock<IInstruction>> delegate;
+  protected ControlFlowGraph<IInstruction, IBasicBlock<IInstruction>> delegate;
 
   /**
    * cache a ref to the exit block for efficient access
@@ -785,7 +785,7 @@ public class SSACFG implements ControlFlowGraph<SSAInstruction, ISSABasicBlock> 
    * @return true if catch block, false otherwise
    */
   public boolean isCatchBlock(int i) {
-    return delegate.isCatchBlock(i);
+    return delegate.getCatchBlocks().get(i);
   }
 
   /*
@@ -1056,11 +1056,7 @@ public class SSACFG implements ControlFlowGraph<SSAInstruction, ISSABasicBlock> 
     if (dest == null) {
       throw new IllegalArgumentException("dest is null");
     }
-    if (dest.isExitBlock()) {
-      int srcNum = getNumber(src);
-      return delegate.getExceptionalToExit().get(srcNum);
-    }
-    return delegate.hasExceptionalEdge(getUnderlyingBlock(src), getUnderlyingBlock(dest));
+    return delegate.getExceptionalSuccessors(getUnderlyingBlock(src)).contains(getUnderlyingBlock(dest));
   }
 
   /**
@@ -1072,11 +1068,7 @@ public class SSACFG implements ControlFlowGraph<SSAInstruction, ISSABasicBlock> 
     if (dest == null) {
       throw new IllegalArgumentException("dest is null");
     }
-    if (dest.isExitBlock()) {
-      int srcNum = getNumber(src);
-      return delegate.getNormalToExit().get(srcNum);
-    }
-    return delegate.hasNormalEdge(getUnderlyingBlock(src), getUnderlyingBlock(dest));
+    return delegate.getNormalSuccessors(getUnderlyingBlock(src)).contains(getUnderlyingBlock(dest));
   }
 
   /*

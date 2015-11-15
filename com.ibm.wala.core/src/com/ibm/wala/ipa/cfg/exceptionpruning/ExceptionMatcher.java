@@ -94,7 +94,7 @@ public class ExceptionMatcher {
 		boolean isFiltered = false;
 		if (this.ignoreExact.contains(exception)) {
 			isFiltered = true;
-		} else {
+		} else if (cha != null){
 			for (final TypeReference ignoreException : this.ignoreSubclass) {
 				final IClass exceptionClass = this.cha.lookupClass(exception);
 				final IClass ignoreClass = this.cha

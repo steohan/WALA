@@ -10,14 +10,25 @@
  *******************************************************************************/
 package com.ibm.wala.ssa;
 
+import com.ibm.wala.analysis.arraybounds.ArrayOutOfBoundsAnalysis;
+import com.ibm.wala.analysis.nullpointer.IntraproceduralNullPointerAnalysis;
 import com.ibm.wala.cfg.ControlFlowGraph;
+import com.ibm.wala.cfg.IBasicBlock;
 import com.ibm.wala.classLoader.IBytecodeMethod;
 import com.ibm.wala.classLoader.IMethod;
 import com.ibm.wala.classLoader.ShrikeCTMethod;
 import com.ibm.wala.classLoader.ShrikeIRFactory;
 import com.ibm.wala.classLoader.SyntheticMethod;
 import com.ibm.wala.ipa.callgraph.Context;
+import com.ibm.wala.ipa.cfg.EdgeFilter;
+import com.ibm.wala.ipa.cfg.EdgeFilterConverterISSABasicBlock2IBasicBlock;
+import com.ibm.wala.ipa.cfg.PrunedCFG;
+import com.ibm.wala.ipa.cfg.exceptionpruning.ExceptionFilter2EdgeFilter;
+import com.ibm.wala.ipa.cfg.exceptionpruning.filter.ArrayOutOfBoundFilter;
+import com.ibm.wala.ipa.cfg.exceptionpruning.filter.CombinedExceptionFilter;
+import com.ibm.wala.ipa.cfg.exceptionpruning.filter.NullPointerExceptionFilter;
 import com.ibm.wala.ipa.summaries.SyntheticIRFactory;
+import com.ibm.wala.shrikeBT.IInstruction;
 import com.ibm.wala.util.debug.Assertions;
 
 /**
@@ -61,7 +72,29 @@ public class DefaultIRFactory implements IRFactory<IMethod> {
     if (method.isSynthetic()) {
       return syntheticFactory.makeIR((SyntheticMethod) method, c, options);
     } else if (method instanceof IBytecodeMethod) {
-      return shrikeFactory.makeIR((IBytecodeMethod) method, c, options);
+      options.setPiNodePolicy(new AllDueToBranchePiPolicy());
+      IR ir = shrikeFactory.makeIR((IBytecodeMethod) method, c, options);
+      
+      SSACFG cfg = ir.getControlFlowGraph();
+
+      ArrayOutOfBoundsAnalysis arrayBoundsAnalysis = new ArrayOutOfBoundsAnalysis(ir);
+      IntraproceduralNullPointerAnalysis nullPointerAnalysis = new IntraproceduralNullPointerAnalysis(ir);
+
+      CombinedExceptionFilter filter = new CombinedExceptionFilter();
+      filter.add(new ArrayOutOfBoundFilter(arrayBoundsAnalysis));
+      filter.add(new NullPointerExceptionFilter(nullPointerAnalysis));
+
+      ExceptionFilter2EdgeFilter<ISSABasicBlock> edgeFilter = new ExceptionFilter2EdgeFilter<ISSABasicBlock>(filter, cfg);
+      EdgeFilterConverterISSABasicBlock2IBasicBlock convertedEdgeFilter = new EdgeFilterConverterISSABasicBlock2IBasicBlock(edgeFilter, cfg);       
+      
+      PrunedCFG<IInstruction, IBasicBlock<IInstruction>> prunedCfg = PrunedCFG.make(ir.getControlFlowGraph().delegate, convertedEdgeFilter);
+      if (!prunedCfg.containsNode(prunedCfg.entry())){
+        //make sure no optimisation will be performed and all things are actually executed.
+        throw new RuntimeException("This exceptions should never make it to master branch.");
+      }
+      //ir.getControlFlowGraph().delegate = prunedCfg;
+      
+      return ir;
     } else {
       Assertions.UNREACHABLE();
       return null;
