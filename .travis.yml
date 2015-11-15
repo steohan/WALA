@@ -9,7 +9,7 @@ before_install:
  - "mkdir -p $TRAVIS_BUILD_DIR/com.ibm.wala.dalvik.test/lib"
  - "find /usr/local -name dx.jar -exec cp '{}' $TRAVIS_BUILD_DIR/com.ibm.wala.dalvik.test/lib/dx.jar ';'"
 install: mvn clean verify -DskipTests=true -B -q
-script: mvn clean -Dtest=CallGraphTest test -B -q
+script: mvn clean verify -B -q
 sudo: false
 cache:
   directories:
