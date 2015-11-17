@@ -11,7 +11,6 @@
 package com.ibm.wala.ssa;
 
 import com.ibm.wala.analysis.arraybounds.ArrayOutOfBoundsAnalysis;
-import com.ibm.wala.analysis.nullpointer.IntraproceduralNullPointerAnalysis;
 import com.ibm.wala.cfg.ControlFlowGraph;
 import com.ibm.wala.cfg.IBasicBlock;
 import com.ibm.wala.classLoader.IBytecodeMethod;
@@ -20,13 +19,11 @@ import com.ibm.wala.classLoader.ShrikeCTMethod;
 import com.ibm.wala.classLoader.ShrikeIRFactory;
 import com.ibm.wala.classLoader.SyntheticMethod;
 import com.ibm.wala.ipa.callgraph.Context;
-import com.ibm.wala.ipa.cfg.EdgeFilter;
 import com.ibm.wala.ipa.cfg.EdgeFilterConverterISSABasicBlock2IBasicBlock;
 import com.ibm.wala.ipa.cfg.PrunedCFG;
 import com.ibm.wala.ipa.cfg.exceptionpruning.ExceptionFilter2EdgeFilter;
 import com.ibm.wala.ipa.cfg.exceptionpruning.filter.ArrayOutOfBoundFilter;
 import com.ibm.wala.ipa.cfg.exceptionpruning.filter.CombinedExceptionFilter;
-import com.ibm.wala.ipa.cfg.exceptionpruning.filter.NullPointerExceptionFilter;
 import com.ibm.wala.ipa.summaries.SyntheticIRFactory;
 import com.ibm.wala.shrikeBT.IInstruction;
 import com.ibm.wala.util.debug.Assertions;
@@ -77,12 +74,10 @@ public class DefaultIRFactory implements IRFactory<IMethod> {
       
       SSACFG cfg = ir.getControlFlowGraph();
 
-      ArrayOutOfBoundsAnalysis arrayBoundsAnalysis = new ArrayOutOfBoundsAnalysis(ir);
-      IntraproceduralNullPointerAnalysis nullPointerAnalysis = new IntraproceduralNullPointerAnalysis(ir);
+      ArrayOutOfBoundsAnalysis arrayBoundsAnalysis = new ArrayOutOfBoundsAnalysis(ir);    
 
       CombinedExceptionFilter filter = new CombinedExceptionFilter();
-      filter.add(new ArrayOutOfBoundFilter(arrayBoundsAnalysis));
-      filter.add(new NullPointerExceptionFilter(nullPointerAnalysis));
+      filter.add(new ArrayOutOfBoundFilter(arrayBoundsAnalysis));      
 
       ExceptionFilter2EdgeFilter<ISSABasicBlock> edgeFilter = new ExceptionFilter2EdgeFilter<ISSABasicBlock>(filter, cfg);
       EdgeFilterConverterISSABasicBlock2IBasicBlock convertedEdgeFilter = new EdgeFilterConverterISSABasicBlock2IBasicBlock(edgeFilter, cfg);       

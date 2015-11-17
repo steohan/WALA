@@ -40,6 +40,8 @@ public class ArrayOutOfBoundFilter implements ExceptionFilter<SSAInstruction> {
 			final LinkedList<FilteredException> result = new LinkedList<FilteredException>();
 			result.add(new FilteredException(
 					TypeReference.JavaLangArrayIndexOutOfBoundsException));
+	     result.add(new FilteredException(
+	          TypeReference.JavaLangNullPointerException));
 
 			return result;
 		} else {
